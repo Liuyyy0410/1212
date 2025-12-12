@@ -1,0 +1,4 @@
+<h4>放映场次</h4>
+{% for show in shows %}
+<button onclick="selectShow({{ show[0] }})">{{ show[1] }} {{ show[2] }} 时间 {{ show[3] }}:{{ show[4] }}</button>
+{% endfor %}

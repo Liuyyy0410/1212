@@ -1,0 +1,9 @@
+<h4>可选座位</h4>
+<h5>黄金区</h5>
+{% for seat in goldSeats %}
+<button onClick="selectSeat({{ seat[0] }},'gold')" {{ seat[1] }}>{{ seat[0] }}</button>
+{% endfor %}
+<h5>标准区</h5>
+{% for seat in standardSeats %}
+<button onClick="selectSeat({{ seat[0] }},'standard')" {{ seat[1] }}>{{ seat[0] }}</button>
+{% endfor %}

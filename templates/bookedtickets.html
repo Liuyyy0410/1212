@@ -1,0 +1,7 @@
+<h4>该场次已预订的票</h4>
+{% for ticket in tickets %}
+<div class="ticket">
+<h5>票号: {{ ticket[0] }}</h5>
+<h6>座位号: {{ ticket[1] }} / {{ ticket[2] }}</h6>
+</div>
+{% endfor %}

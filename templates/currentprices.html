@@ -1,0 +1,8 @@
+<h4>选择价格表</h4>
+{% for price in prices %}
+<button onclick="alterPrice({{ price[0] }})">
+	<h5>{{ price[1] }} / {{ price[2] }}</h5>
+	<h6>标准: ￥ {{ price[3] }}</h6>
+	<h6>黄金: ￥ {{ price[3] * 1.5 }}</h6>
+</button>
+{% endfor %}
