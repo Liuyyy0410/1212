@@ -3,7 +3,7 @@ USE db_theatre;
 
 SET foreign_key_checks=0;
 
--- 删除旧表
+-- 删除旧表 (重置结构)
 DROP TABLE IF EXISTS movie_genres;
 DROP TABLE IF EXISTS booked_tickets;
 DROP TABLE IF EXISTS shows;
@@ -11,14 +11,17 @@ DROP TABLE IF EXISTS price_listing;
 DROP TABLE IF EXISTS hall_seats;
 DROP TABLE IF EXISTS halls;
 DROP TABLE IF EXISTS movies;
-DROP TABLE IF EXISTS types; -- 确保旧表被删
+DROP TABLE IF EXISTS types;
+DROP TABLE IF EXISTS members;      -- 新增
+DROP TABLE IF EXISTS snack_sales;  -- 新增
+DROP TABLE IF EXISTS snacks;       -- 新增
 
--- 1. 影厅表 (实体)
+-- 1. 影厅表
 CREATE TABLE halls (
     hall_id INT PRIMARY KEY
 );
 
--- 2. 影厅座位配置 (属性)
+-- 2. 影厅座位配置
 CREATE TABLE hall_seats (
     hall_id INT,
     class VARCHAR(10),
@@ -27,7 +30,7 @@ CREATE TABLE hall_seats (
     FOREIGN KEY(hall_id) REFERENCES halls(hall_id) ON DELETE CASCADE
 );
 
--- 3. 电影表 (实体)
+-- 3. 电影表
 CREATE TABLE movies (
     movie_id INT PRIMARY KEY,
     movie_name VARCHAR(100),
@@ -45,13 +48,13 @@ CREATE TABLE movie_genres (
     FOREIGN KEY(movie_id) REFERENCES movies(movie_id) ON DELETE CASCADE
 );
 
--- 5. 价目表 (规则)
+-- 5. 价目表
 CREATE TABLE price_listing (
     price_id INT PRIMARY KEY AUTO_INCREMENT,
-    type VARCHAR(10), -- 2D, 3D, 4DX
-    day VARCHAR(10),  -- Monday, Tuesday...
+    type VARCHAR(10), 
+    day VARCHAR(10),
     price INT,
-    UNIQUE KEY(type, day) -- 确保唯一性，方便查询
+    UNIQUE KEY(type, day)
 );
 
 -- 6. 排片表 
@@ -59,26 +62,50 @@ CREATE TABLE shows (
     show_id INT PRIMARY KEY,
     movie_id INT,
     hall_id INT,
-    type VARCHAR(10), -- 只需要存储制式，价格通过 (type + date) 动态计算
+    type VARCHAR(10),
     time INT,
     show_date DATE,
-  
     FOREIGN KEY(movie_id) REFERENCES movies(movie_id) ON DELETE CASCADE,
     FOREIGN KEY(hall_id) REFERENCES halls(hall_id) ON DELETE CASCADE
-
 );
 
--- 7. 订单表 
+-- 7. [新增] 会员表
+CREATE TABLE members (
+    member_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50),
+    phone VARCHAR(20) UNIQUE,
+    points INT DEFAULT 0
+);
+
+-- 8. [修改] 订单表 (增加 member_id 外键)
 CREATE TABLE booked_tickets (
     ticket_no INT PRIMARY KEY,
     show_id INT,
     seat_no INT,
-    FOREIGN KEY(show_id) REFERENCES shows(show_id) ON DELETE CASCADE
+    member_id INT, -- 允许为空
+    FOREIGN KEY(show_id) REFERENCES shows(show_id) ON DELETE CASCADE,
+    FOREIGN KEY(member_id) REFERENCES members(member_id) ON DELETE SET NULL
+);
+
+-- 9. [新增] 小吃表
+CREATE TABLE snacks (
+    snack_id INT PRIMARY KEY AUTO_INCREMENT,
+    snack_name VARCHAR(50),
+    price INT
+);
+
+-- 10. [新增] 小吃销售记录
+CREATE TABLE snack_sales (
+    sale_id INT PRIMARY KEY AUTO_INCREMENT,
+    snack_id INT,
+    quantity INT,
+    sale_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(snack_id) REFERENCES snacks(snack_id) ON DELETE CASCADE
 );
 
 SET foreign_key_checks=1;
 
--- 初始化数据
+-- 初始化影厅
 INSERT INTO halls VALUES (1), (2), (3);
 
 INSERT INTO hall_seats VALUES
@@ -86,7 +113,7 @@ INSERT INTO hall_seats VALUES
 (2, "gold", 27), (2, "standard", 97), 
 (3, "gold", 26), (3, "standard", 98);
 
--- 基础价目表
+-- 初始化价目表
 INSERT INTO price_listing (type, day, price) VALUES
 ('2D', 'Monday', 30), ('3D', 'Monday', 45), ('4DX', 'Monday', 60),
 ('2D', 'Tuesday', 30), ('3D', 'Tuesday', 45), ('4DX', 'Tuesday', 60),
@@ -95,6 +122,8 @@ INSERT INTO price_listing (type, day, price) VALUES
 ('2D', 'Friday', 50), ('3D', 'Friday', 65), ('4DX', 'Friday', 90),
 ('2D', 'Saturday', 60), ('3D', 'Saturday', 75), ('4DX', 'Saturday', 100),
 ('2D', 'Sunday', 60), ('3D', 'Sunday', 75), ('4DX', 'Sunday', 100);
+
+
 
 -- 1. 阿凡达3：火与灰
 INSERT INTO movies VALUES (101, '阿凡达：火与灰 (Avatar: Fire and Ash)', 190, '英语', '2025-12-19', '2026-02-28');
@@ -136,19 +165,26 @@ INSERT INTO movie_genres VALUES (109, '灾难'), (109, '科幻'), (109, '动作'
 INSERT INTO movies VALUES (110, '六月再见 (Goodbye June)', 105, '英语', '2025-12-20', '2026-01-10');
 INSERT INTO movie_genres VALUES (110, '家庭'), (110, '剧情'), (110, '节日');
 
--- 插入示范排片 (价格会自动设置)
+-- 插入示范排片
 INSERT INTO shows (show_id, movie_id, hall_id, type, time, show_date) VALUES 
 (1001, 101, 1, '3D', 1000, '2025-12-25'),  -- 阿凡达 早上10点
 (1002, 101, 1, '4DX', 1400, '2025-12-25'), -- 阿凡达 下午2点
 (1003, 106, 2, '2D', 1830, '2025-12-25'),  -- 马蒂至尊 晚上6点半
 (1004, 108, 3, '2D', 2100, '2025-12-25'),  -- 狂蟒之灾 晚上9点
-(1005, 102, 2, '2D', 1000, '2025-12-26'),  -- 海绵宝宝：寻找方裤裤
-(1006, 103, 3, '2D', 2100, '2025-12-26'),  -- 女佣 (The Housemaid)
-(1007, 104, 1, '2D', 1300, '2025-12-26'),  -- 大卫王 (David)
+(1005, 102, 2, '2D', 1000, '2025-12-26'),  -- 海绵宝宝
+(1006, 103, 3, '2D', 2100, '2025-12-26'),  -- 女佣
+(1007, 104, 1, '2D', 1300, '2025-12-26'),  -- 大卫王
 (1008, 105, 2, '2D', 1900, '2025-12-26'),  -- 这玩意儿开着吗?
-(1009, 107, 3, '2D', 1600, '2025-12-26'),  -- 蓝色歌唱 (Song Sung Blue)
-(1010, 109, 1, '3D', 1400, '2025-12-26'),  -- 末日大洪水 (The Great Flood)
-(1011, 110, 2, '2D', 1800, '2025-12-26');  -- 六月再见 (Goodbye June)
+(1009, 107, 3, '2D', 1600, '2025-12-26'),  -- 蓝色歌唱
+(1010, 109, 1, '3D', 1400, '2025-12-26'),  -- 末日大洪水
+(1011, 110, 2, '2D', 1800, '2025-12-26');  -- 六月再见
+
+-- [新增] 初始化小吃数据
+INSERT INTO snacks (snack_name, price) VALUES 
+('爆米花 (Popcorn)', 20), 
+('可乐 (Coke)', 10), 
+('薯片 (Chips)', 15),
+('矿泉水 (Water)', 5);
 
 -- 存储过程
 DROP PROCEDURE IF EXISTS delete_old;
