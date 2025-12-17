@@ -1,8 +1,29 @@
 <button onclick="login()" class="btn btn-warning">重置 (Reset)</button>
 <h5 style="display: inline-block; vertical-align: middle; margin-left: 25px; margin-right: 25px; margin-top: 28px; font-size: 32px; border: 3px solid #FFFFFF; padding-bottom: 6px; padding-top: 3px; padding-left: 8px; padding-right: 8px; border-radius: 20px">收银台 (Cashier)</h5>
 <button onclick="location.href='./'" class="btn btn-warning">注销 (Logout)</button>
+
+<div id="member-section" style="margin: 20px; border: 1px solid white; padding: 10px; border-radius: 10px; background-color: rgba(0,0,0,0.3);">
+    <h6 style="display:inline; margin-right:10px;">会员查询 (Membership)</h6>
+    <input id="member-phone" placeholder="输入手机号" style="color: black;">
+    <button onclick="checkMember()" class="btn btn-info btn-sm">查询</button>
+    <div id="member-info" style="display: inline-block; margin-left: 10px;"></div>
+</div>
+
 <input id="datepicker-cashier" placeholder="请选择日期 (Pick a date)">
 <div id="movies-on-date"></div>
 <div id="timings-for-movie"></div>
 <div id="available-seats"></div>
 <div id="price-and-confirm"></div>
+
+<div id="snack-section" style="margin-top: 30px; border-top: 2px dashed white; padding-top: 20px;">
+    <div class="row">
+        <div class="col-md-8">
+            <div id="snack-list"></div>
+        </div>
+        <div class="col-md-4">
+            <div id="snack-cart" style="border: 1px solid gray; padding: 10px; min-height: 100px; background-color: rgba(255,255,255,0.1);">
+                购物车为空
+            </div>
+        </div>
+    </div>
+</div>
